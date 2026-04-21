@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-// 1. Tambahkan import komponen grafik dari Recharts di sini
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 function App() {
@@ -32,56 +31,64 @@ function App() {
 
   if (pesanError) {
     return (
-      <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
-        <h1 style={{ color: '#e74c3c' }}>❌ Gagal Mengambil Data</h1>
-        <p>Pesan dari server: <b>{pesanError}</b></p>
+      <div className="text-center mt-16 font-sans">
+        <h1 className="text-3xl font-bold text-red-500 mb-2">❌ Gagal Mengambil Data</h1>
+        <p className="text-gray-700">Pesan dari server: <span className="font-semibold">{pesanError}</span></p>
       </div>
     )
   }
 
   if (loading) {
-    return <h2 style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>⏳ Menyiapkan Dashboard...</h2>
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <h2 className="text-2xl font-semibold text-gray-600 animate-pulse">⏳ Menyiapkan Dashboard...</h2>
+      </div>
+    )
   }
 
-  // 2. Siapkan format data khusus untuk Grafik Pie
   // Data ini otomatis membaca dari state 'ringkasan' milikmu
   const dataGrafik = ringkasan ? [
-    { name: 'Positif', value: ringkasan.Positif || 0, color: '#2ecc71' },
-    { name: 'Negatif', value: ringkasan.Negatif || 0, color: '#e74c3c' },
-    { name: 'Netral', value: ringkasan.Netral || 0, color: '#95a5a6' }
+    { name: 'Positif', value: ringkasan.Positif || 0, color: '#22c55e' }, // emerald-500
+    { name: 'Negatif', value: ringkasan.Negatif || 0, color: '#ef4444' }, // red-500
+    { name: 'Netral', value: ringkasan.Netral || 0, color: '#9ca3af' }  // gray-400
   ] : []
 
   return (
-    <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
-      <h1 style={{ borderBottom: '2px solid #ccc', paddingBottom: '10px' }}>📊 Dashboard Analisis Sentimen</h1>
+    <div className="p-6 md:p-10 font-sans max-w-6xl mx-auto bg-gray-50 min-h-screen">
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-800 border-b-2 border-gray-200 pb-4 mb-8">
+        📊 Dashboard Analisis Sentimen
+      </h1>
       
-      {/* KARTU RINGKASAN (Tetap sama seperti sebelumnya) */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', marginTop: '20px' }}>
-        <div style={{ flex: 1, padding: '20px', backgroundColor: '#2ecc71', color: 'white', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: 0 }}>Positif</h3>
-          <p style={{ fontSize: '36px', fontWeight: 'bold', margin: '10px 0 0 0' }}>{ringkasan?.Positif || 0}</p>
+      {/* KARTU RINGKASAN */}
+      {/* flex-col untuk layar HP, md:flex-row untuk layar laptop */}
+      <div className="flex flex-col md:flex-row gap-6 mb-10">
+        <div className="flex-1 p-6 bg-green-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+          <h3 className="text-lg font-medium opacity-90 m-0">Positif</h3>
+          <p className="text-5xl font-extrabold mt-2 tracking-tight">{ringkasan?.Positif || 0}</p>
         </div>
-        <div style={{ flex: 1, padding: '20px', backgroundColor: '#e74c3c', color: 'white', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: 0 }}>Negatif</h3>
-          <p style={{ fontSize: '36px', fontWeight: 'bold', margin: '10px 0 0 0' }}>{ringkasan?.Negatif || 0}</p>
+        
+        <div className="flex-1 p-6 bg-red-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+          <h3 className="text-lg font-medium opacity-90 m-0">Negatif</h3>
+          <p className="text-5xl font-extrabold mt-2 tracking-tight">{ringkasan?.Negatif || 0}</p>
         </div>
-        <div style={{ flex: 1, padding: '20px', backgroundColor: '#95a5a6', color: 'white', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: 0 }}>Netral</h3>
-          <p style={{ fontSize: '36px', fontWeight: 'bold', margin: '10px 0 0 0' }}>{ringkasan?.Netral || 0}</p>
+        
+        <div className="flex-1 p-6 bg-gray-400 text-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+          <h3 className="text-lg font-medium opacity-90 m-0">Netral</h3>
+          <p className="text-5xl font-extrabold mt-2 tracking-tight">{ringkasan?.Netral || 0}</p>
         </div>
       </div>
 
-      {/* 3. KOMPONEN GRAFIK (Baru ditambahkan) */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '30px', height: '350px' }}>
-        <h2 style={{ textAlign: 'center', marginTop: 0, color: '#333' }}>Distribusi Sentimen Kutipan</h2>
+      {/* KOMPONEN GRAFIK */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-10 h-[400px]">
+        <h2 className="text-center text-xl font-bold text-gray-700 mb-4">Distribusi Sentimen Kutipan</h2>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={dataGrafik}
               cx="50%"
               cy="50%"
-              innerRadius={70} // Ini membuat grafiknya bolong di tengah (seperti donat)
-              outerRadius={110}
+              innerRadius={80}
+              outerRadius={120}
               paddingAngle={5}
               dataKey="value"
             >
@@ -89,28 +96,32 @@ function App() {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip 
+              contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+            />
             <Legend verticalAlign="bottom" height={36} />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
       {/* TABEL DATA */}
-      <h2>Detail Data Teks</h2>
-      <div style={{ overflowX: 'auto', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Detail Data Teks</h2>
+      <div className="overflow-x-auto bg-white rounded-xl shadow-md border border-gray-100 mb-4">
+        <table className="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
           <thead>
-            <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-              <th style={{ padding: '15px' }}>Teks Kutipan (Hasil Tokenisasi)</th>
-              <th style={{ padding: '15px', width: '150px' }}>Label Sentimen</th>
+            <tr className="bg-gray-100 border-b-2 border-gray-200 text-gray-700">
+              <th className="p-4 font-semibold w-3/4">Teks Kutipan (Hasil Tokenisasi)</th>
+              <th className="p-4 font-semibold w-1/4">Label Sentimen</th>
             </tr>
           </thead>
           <tbody>
             {kutipan?.slice(0, 15).map((baris, index) => (
-              <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                {/* INGAT: Ganti 'KOLOM_KUTIPAN_MU' dengan nama kolom yang benar! */}
-                <td style={{ padding: '15px' }}>{baris.Kutipan}</td>
-                <td style={{ padding: '15px', fontWeight: 'bold', color: baris.Label_Sentimen === 'Positif' ? '#27ae60' : baris.Label_Sentimen === 'Negatif' ? '#c0392b' : '#7f8c8d' }}>
+              <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td className="p-4 text-gray-600 leading-relaxed">{baris.Kutipan}</td>
+                <td className={`p-4 font-bold 
+                  ${baris.Label_Sentimen === 'Positif' ? 'text-green-600' : 
+                    baris.Label_Sentimen === 'Negatif' ? 'text-red-600' : 'text-gray-500'}`}
+                >
                   {baris.Label_Sentimen}
                 </td>
               </tr>
@@ -118,7 +129,10 @@ function App() {
           </tbody>
         </table>
       </div>
-      <p style={{ color: '#666', fontSize: '14px' }}>*Menampilkan 15 sampel data teratas dari total {kutipan?.length || 0} data.</p>
+      
+      <p className="text-gray-500 text-sm font-medium">
+        *Menampilkan 15 sampel data teratas dari total <span className="text-gray-800 font-bold">{kutipan?.length || 0}</span> data.
+      </p>
     </div>
   )
 }

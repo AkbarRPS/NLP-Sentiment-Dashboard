@@ -3,16 +3,18 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // TAMBAHKAN BARIS INI: Agar Vercel bisa membaca lokasi file dengan benar
+  base: './', 
+  
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       
-      // --- TAMBAHKAN 3 BARIS INI UNTUK MEMAKSA PWA NYALA ---
+      // Memastikan PWA aktif bahkan saat proses pengembangan
       devOptions: {
         enabled: true
       },
-      // ---------------------------------------------------
 
       includeAssets: [], 
       manifest: {

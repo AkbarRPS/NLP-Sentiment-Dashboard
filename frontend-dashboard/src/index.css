@@ -1,14 +1,13 @@
 @import "tailwindcss";
 
-/* Cara manual yang paling stabil di v4 */
 :root {
-  --background: #f9fafb; /* gray-50 */
-  --text-main: #1f2937; /* gray-800 */
+  --background: #f9fafb; /* Latar terang */
+  --text-main: #1f2937;  /* Judul & teks hitam saat terang */
 }
 
 .dark {
-  --background: #111827; /* gray-900 */
-  --text-main: #f9fafb; /* gray-50 */
+  --background: #111827; /* Latar gelap */
+  --text-main: #ffffff;  /* Judul & teks putih saat gelap */
 }
 
 body {

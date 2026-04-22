@@ -67,13 +67,13 @@ function App() {
 
         
         <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-gray-200 dark:border-gray-700 pb-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">
+          <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-main)] mb-4 md:mb-0 transition-colors duration-300">
             📊 Dashboard Analisis Sentimen
           </h1>
           
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-full shadow-sm hover:shadow-md transition-all font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-[var(--text-main)] border border-gray-300 dark:border-gray-600 rounded-full shadow-sm hover:shadow-md transition-all font-medium"
           >
             {isDarkMode ? '☀️ Mode Terang' : '🌙 Mode Gelap'}
           </button>

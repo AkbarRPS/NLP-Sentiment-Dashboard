@@ -9,13 +9,12 @@ function AnimatedNumber({ value }) {
     let start = 0;
     const end = parseInt(value);
     
-    // Pengaman: Jika nilainya 0 atau bukan angka, langsung tampilkan tanpa animasi
     if (!end || start === end) {
       setDisplayValue(end || 0);
       return;
     }
 
-    let totalMilidetik = 1000; // Animasi selesai dalam 1 detik
+    let totalMilidetik = 1000; 
     let intervalWaktu = Math.max(totalMilidetik / end, 10); 
 
     let timer = setInterval(() => {
@@ -23,11 +22,10 @@ function AnimatedNumber({ value }) {
       setDisplayValue(start);
       if (start >= end) {
         clearInterval(timer);
-        setDisplayValue(end); // Pastikan angka berhenti tepat di nilai tujuan
+        setDisplayValue(end); 
       }
     }, intervalWaktu);
 
-    // Bersihkan memori timer saat komponen dimuat ulang
     return () => clearInterval(timer);
   }, [value]);
 
@@ -43,7 +41,6 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Efek Sakelar Dark Mode
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -52,7 +49,6 @@ function App() {
     }
   }, [isDarkMode])
 
-  // Fetch Data API
   useEffect(() => {
     fetch('https://akbarabay-sentimen.hf.space/api/summary')
       .then(res => res.json())
@@ -67,7 +63,6 @@ function App() {
       .then(data => {
         if (data.status === 'error') throw new Error(data.pesan)
         setKutipan(data.data || [])
-        // Simulasi loading 0.8 detik agar skeleton screen terlihat elegan
         setTimeout(() => setLoading(false), 800) 
       })
       .catch(err => {
@@ -76,12 +71,38 @@ function App() {
       })
   }, [])
 
-  // Logika Filter Pencarian
   const dataTerfilter = kutipan.filter((item) => {
     return item.Kutipan.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // --- VIEW 1: LOADING (SKELETON SCREEN) ---
+  // --- LOGIKA EXPORT CSV (BARU) ---
+  const handleExportCSV = () => {
+    // 1. Buat Baris Header CSV
+    let csvContent = "Kutipan,Label Sentimen\n";
+
+    // 2. Looping data yang sedang tampil (terfilter)
+    dataTerfilter.forEach(row => {
+      // Bersihkan teks dari tanda kutip ganda agar format CSV tidak rusak
+      let teksBersih = row.Kutipan.replace(/"/g, '""');
+      // Tambahkan ke string CSV
+      csvContent += `"${teksBersih}","${row.Label_Sentimen}"\n`;
+    });
+
+    // 3. Buat file virtual di memori browser
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    // 4. Buat tag <a> tersembunyi untuk memicu download otomatis
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Data_Sentimen_${searchTerm ? 'Filtered' : 'All'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    
+    // 5. Bersihkan jejak
+    document.body.removeChild(link);
+  }
+
   if (loading) {
     return (
       <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] transition-colors duration-300">
@@ -110,7 +131,6 @@ function App() {
     )
   }
 
-  // --- VIEW 2: ERROR SCREEN ---
   if (pesanError) {
     return (
       <div className="text-center mt-16 font-sans bg-[var(--background)] min-h-screen pt-10 transition-colors duration-300 text-[var(--text-main)]">
@@ -120,7 +140,6 @@ function App() {
     )
   }
 
-  // --- VIEW 3: MAIN DASHBOARD ---
   const dataGrafik = ringkasan ? [
     { name: 'Positif', value: ringkasan.Positif || 0, color: '#22c55e' }, 
     { name: 'Negatif', value: ringkasan.Negatif || 0, color: '#ef4444' }, 
@@ -145,7 +164,7 @@ function App() {
           </button>
         </div>
         
-        {/* RINGKASAN CARDS (Dengan Animasi Angka) */}
+        {/* RINGKASAN CARDS */}
         <div className="flex flex-col md:flex-row gap-6 mb-10 text-white">
           <div className="flex-1 p-6 bg-green-500 rounded-2xl shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg font-medium opacity-90 m-0">Positif</h3>
@@ -200,7 +219,7 @@ function App() {
           </ResponsiveContainer>
         </div>
 
-        {/* DATA HEADER & SEARCH */}
+        {/* DATA HEADER, SEARCH & EXPORT BUTTON */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
           <div>
             <h2 className="text-2xl font-bold">Detail Data Teks</h2>
@@ -209,15 +228,26 @@ function App() {
             </p>
           </div>
 
-          <div className="w-full md:w-80 relative">
-            <span className="absolute left-4 top-2.5 opacity-50">🔍</span>
-            <input
-              type="text"
-              placeholder="Cari kutipan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm transition-all text-sm text-[var(--text-main)]"
-            />
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Input Search */}
+            <div className="w-full sm:w-64 relative">
+              <span className="absolute left-4 top-2.5 opacity-50">🔍</span>
+              <input
+                type="text"
+                placeholder="Cari kutipan..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm transition-all text-sm text-[var(--text-main)]"
+              />
+            </div>
+            
+            {/* Tombol Export */}
+            <button 
+              onClick={handleExportCSV}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              📥 Unduh CSV
+            </button>
           </div>
         </div>
 

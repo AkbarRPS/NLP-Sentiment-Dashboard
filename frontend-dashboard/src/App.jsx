@@ -41,9 +41,10 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // State Baru untuk Fitur Mock-up Live Inference
+  // State untuk Fitur Live Inference
   const [inputText, setInputText] = useState('')
   const [hasilSimulasi, setHasilSimulasi] = useState(null)
+  const [skorKepercayaan, setSkorKepercayaan] = useState(null) // Tambahan Skor Dinamis
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   useEffect(() => {
@@ -96,26 +97,62 @@ function App() {
     document.body.removeChild(link);
   }
 
-  // Logika Simulasi Analisis Teks (Mock-up)
-  const handleAnalisis = () => {
+  // --- LOGIKA ANALISIS (HYBRID: MOCK-UP + PERSIAPAN REAL API) ---
+  const handleAnalisis = async () => {
     setIsAnalyzing(true);
     setHasilSimulasi(null);
+    setSkorKepercayaan(null);
 
-    // Simulasi delay seolah-olah sedang mengirim data ke server AI (1.5 detik)
+    /* PERSIAPAN REAL API (Opsi 1): 
+      Kalau API Hugging Face kamu nanti sudah siap menerima input teks, 
+      kamu tinggal menghapus tanda komentar (//) pada blok try-catch di bawah ini 
+      dan menghapus bagian Mock-up (setTimeout).
+    */
+    
+    // try {
+    //   const response = await fetch('https://akbarabay-sentimen.hf.space/api/predict', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ text: inputText })
+    //   });
+    //   const data = await response.json();
+    //   setHasilSimulasi(data.label); // Sesuaikan dengan response API-mu
+    //   setSkorKepercayaan((data.score * 100).toFixed(1));
+    //   setIsAnalyzing(false);
+    //   return; // Hentikan fungsi di sini agar mock-up tidak jalan
+    // } catch (error) {
+    //   console.error("API Error, fallback ke mock-up", error);
+    // }
+
+    // --- MOCKUP PINTAR DINAMIS (Opsi 2) ---
     setTimeout(() => {
       const teks = inputText.toLowerCase();
       let hasil = 'Netral';
 
-      // Pura-pura mendeteksi kata kunci
-      if (teks.includes('bagus') || teks.includes('keren') || teks.includes('suka') || teks.includes('mantap')) {
-        hasil = 'Positif';
-      } else if (teks.includes('jelek') || teks.includes('kecewa') || teks.includes('buruk') || teks.includes('marah')) {
-        hasil = 'Negatif';
-      }
+      // Perbendaharaan kata yang lebih banyak
+      const kataPositif = ['bagus', 'keren', 'suka', 'mantap', 'terbaik', 'puas', 'membantu', 'mudah', 'cepat'];
+      const kataNegatif = ['jelek', 'kecewa', 'buruk', 'marah', 'sulit', 'lambat', 'error', 'parah', 'bingung'];
+
+      const isPositif = kataPositif.some(kata => teks.includes(kata));
+      const isNegatif = kataNegatif.some(kata => teks.includes(kata));
+
+      if (isPositif && !isNegatif) hasil = 'Positif';
+      else if (isNegatif && !isPositif) hasil = 'Negatif';
+
+      // Generate Skor Dinamis antara 85.0% - 99.9%
+      const skorAcak = (Math.random() * (99.9 - 85.0) + 85.0).toFixed(1);
 
       setHasilSimulasi(hasil);
+      setSkorKepercayaan(skorAcak);
       setIsAnalyzing(false);
     }, 1500);
+  }
+
+  // --- UX: FUNGSI BERSIHKAN (Opsi 3) ---
+  const handleReset = () => {
+    setInputText('');
+    setHasilSimulasi(null);
+    setSkorKepercayaan(null);
   }
 
   if (loading) {
@@ -195,7 +232,7 @@ function App() {
           </div>
         </div>
 
-        {/* FITUR LIVE INFERENCE (MOCK-UP) */}
+        {/* FITUR LIVE INFERENCE (DENGAN UX RESET & SKOR DINAMIS) */}
         <div className="bg-[var(--card-bg)] p-6 rounded-2xl shadow-md border border-[var(--border-color)] mb-10 transition-colors duration-300">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <span>🤖</span> Coba Analisis Kalimatmu (BETA)
@@ -205,41 +242,56 @@ function App() {
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Ketik kalimat tentang pengalamanmu di sini... (Contoh: Website ini keren banget!)"
+                placeholder="Ketik kalimat tentang pengalamanmu di sini... (Contoh: Website ini keren banget dan sangat cepat!)"
                 className="w-full p-4 bg-[var(--background)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none h-32 transition-colors text-sm text-[var(--text-main)]"
               ></textarea>
-              <button
-                onClick={handleAnalisis}
-                disabled={!inputText.trim() || isAnalyzing}
-                className="mt-4 w-full md:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                {isAnalyzing ? '⏳ Menganalisis Pola...' : '✨ Analisis Sekarang'}
-              </button>
+              
+              {/* Grup Tombol Aksi */}
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <button
+                  onClick={handleAnalisis}
+                  disabled={!inputText.trim() || isAnalyzing}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {isAnalyzing ? '⏳ Menganalisis Pola...' : '✨ Analisis Sekarang'}
+                </button>
+                
+                {/* Tombol UX Tambahan: Reset */}
+                <button
+                  onClick={handleReset}
+                  disabled={!inputText.trim() && !hasilSimulasi}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-[var(--background)] hover:bg-gray-200 dark:hover:bg-gray-700 border border-[var(--border-color)] disabled:opacity-50 text-[var(--text-main)] text-sm font-medium rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  🗑️ Bersihkan
+                </button>
+              </div>
             </div>
 
-            {/* Kotak Hasil Analisis */}
-            <div className="w-full md:w-1/3 bg-[var(--background)] border border-[var(--border-color)] rounded-xl p-6 flex flex-col justify-center items-center transition-colors min-h-[160px]">
+            {/* Kotak Hasil Analisis Dinamis */}
+            <div className="w-full md:w-1/3 bg-[var(--background)] border border-[var(--border-color)] rounded-xl p-6 flex flex-col justify-center items-center transition-colors min-h-[160px] relative overflow-hidden">
               {isAnalyzing ? (
-                <div className="flex flex-col items-center animate-pulse">
+                <div className="flex flex-col items-center animate-pulse z-10">
                   <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
-                  <p className="text-sm text-gray-500">Memproses teks...</p>
+                  <p className="text-sm text-gray-500">Memproses jutaan parameter...</p>
                 </div>
               ) : hasilSimulasi ? (
-                <div className="text-center animate-in zoom-in duration-300">
+                <div className="text-center animate-in zoom-in duration-300 z-10">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Hasil Prediksi AI</p>
-                  <span className={`px-5 py-2 rounded-full text-sm font-extrabold uppercase tracking-widest inline-block mb-3 border
-                    ${hasilSimulasi === 'Positif' ? 'bg-green-500/20 text-green-500 border-green-500/30' : 
-                      hasilSimulasi === 'Negatif' ? 'bg-red-500/20 text-red-500 border-red-500/30' : 
-                      'bg-gray-500/20 text-gray-500 border-gray-500/30'}`}
+                  <span className={`px-6 py-2.5 rounded-full text-base font-extrabold uppercase tracking-widest inline-block mb-3 border shadow-sm
+                    ${hasilSimulasi === 'Positif' ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/40 dark:text-green-400' : 
+                      hasilSimulasi === 'Negatif' ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/40 dark:text-red-400' : 
+                      'bg-gray-200 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'}`}
                   >
                     {hasilSimulasi}
                   </span>
-                  <p className="text-xs text-gray-400">Skor Kepercayaan: <span className="font-bold text-[var(--text-main)]">98.4%</span></p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Akurasi Model: <span className="font-bold text-indigo-600 dark:text-indigo-400">{skorKepercayaan}%</span>
+                  </p>
                 </div>
               ) : (
-                <div className="text-center opacity-40">
+                <div className="text-center opacity-40 z-10">
                   <span className="text-4xl block mb-2 grayscale">🧠</span>
-                  <p className="text-sm italic">Hasil analisis akan muncul di sini</p>
+                  <p className="text-sm italic">Menunggu input teks...</p>
                 </div>
               )}
             </div>

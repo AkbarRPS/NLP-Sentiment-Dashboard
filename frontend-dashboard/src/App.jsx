@@ -61,9 +61,10 @@ function App() {
     { name: 'Netral', value: ringkasan.Netral || 0, color: '#9ca3af' }  
   ] : []
 
-  return (
-    <div className="p-6 md:p-10 font-sans min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
+ return (
+  <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] text-[var(--text-main)] transition-colors duration-300">
+    <div className="max-w-6xl mx-auto">
+
         
         <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-gray-200 dark:border-gray-700 pb-4 mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">

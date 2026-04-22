@@ -103,26 +103,6 @@ function App() {
     setHasilSimulasi(null);
     setSkorKepercayaan(null);
 
-    /* PERSIAPAN REAL API (Opsi 1): 
-      Kalau API Hugging Face kamu nanti sudah siap menerima input teks, 
-      kamu tinggal menghapus tanda komentar (//) pada blok try-catch di bawah ini 
-      dan menghapus bagian Mock-up (setTimeout).
-    */
-    
-    // try {
-    //   const response = await fetch('https://akbarabay-sentimen.hf.space/api/predict', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ text: inputText })
-    //   });
-    //   const data = await response.json();
-    //   setHasilSimulasi(data.label); // Sesuaikan dengan response API-mu
-    //   setSkorKepercayaan((data.score * 100).toFixed(1));
-    //   setIsAnalyzing(false);
-    //   return; // Hentikan fungsi di sini agar mock-up tidak jalan
-    // } catch (error) {
-    //   console.error("API Error, fallback ke mock-up", error);
-    // }
 
     // --- MOCKUP PINTAR DINAMIS (Opsi 2) ---
     setTimeout(() => {

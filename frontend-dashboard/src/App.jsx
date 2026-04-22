@@ -1,6 +1,40 @@
 import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
+// --- KOMPONEN ANIMASI ANGKA ---
+function AnimatedNumber({ value }) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = parseInt(value);
+    
+    // Pengaman: Jika nilainya 0 atau bukan angka, langsung tampilkan tanpa animasi
+    if (!end || start === end) {
+      setDisplayValue(end || 0);
+      return;
+    }
+
+    let totalMilidetik = 1000; // Animasi selesai dalam 1 detik
+    let intervalWaktu = Math.max(totalMilidetik / end, 10); 
+
+    let timer = setInterval(() => {
+      start += 1;
+      setDisplayValue(start);
+      if (start >= end) {
+        clearInterval(timer);
+        setDisplayValue(end); // Pastikan angka berhenti tepat di nilai tujuan
+      }
+    }, intervalWaktu);
+
+    // Bersihkan memori timer saat komponen dimuat ulang
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return <span>{displayValue}</span>;
+}
+
+// --- KOMPONEN UTAMA DASHBOARD ---
 function App() {
   const [ringkasan, setRingkasan] = useState(null)
   const [kutipan, setKutipan] = useState([])
@@ -9,7 +43,7 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // 1. Logika Dark Mode (Sesuai v4 yang kita ulik)
+  // Efek Sakelar Dark Mode
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -18,7 +52,7 @@ function App() {
     }
   }, [isDarkMode])
 
-  // 2. Fetch Data
+  // Fetch Data API
   useEffect(() => {
     fetch('https://akbarabay-sentimen.hf.space/api/summary')
       .then(res => res.json())
@@ -33,7 +67,7 @@ function App() {
       .then(data => {
         if (data.status === 'error') throw new Error(data.pesan)
         setKutipan(data.data || [])
-        // Simulasi loading sedikit lebih lama (opsional: hapus setTimeout jika ingin instan)
+        // Simulasi loading 0.8 detik agar skeleton screen terlihat elegan
         setTimeout(() => setLoading(false), 800) 
       })
       .catch(err => {
@@ -42,33 +76,29 @@ function App() {
       })
   }, [])
 
-  // 3. Logika Filter Pencarian
+  // Logika Filter Pencarian
   const dataTerfilter = kutipan.filter((item) => {
     return item.Kutipan.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // --- VIEW: LOADING (SKELETON SCREEN) ---
+  // --- VIEW 1: LOADING (SKELETON SCREEN) ---
   if (loading) {
     return (
       <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] transition-colors duration-300">
         <div className="max-w-6xl mx-auto">
-          {/* Header Skeleton */}
           <div className="flex justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8">
             <div className="h-10 w-64 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
             <div className="h-10 w-32 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
           </div>
-          {/* Cards Skeleton */}
           <div className="flex flex-col md:flex-row gap-6 mb-10">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex-1 h-32 bg-gray-300 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
             ))}
           </div>
-          {/* Chart Skeleton */}
           <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] mb-10 h-[400px] flex flex-col items-center justify-center">
             <div className="h-6 w-48 bg-gray-300 dark:bg-gray-700 rounded mb-8 animate-pulse"></div>
             <div className="w-56 h-56 rounded-full border-[20px] border-gray-200 dark:border-gray-700 animate-pulse"></div>
           </div>
-          {/* Table Skeleton */}
           <div className="h-8 w-40 bg-gray-300 dark:bg-gray-700 rounded mb-4 animate-pulse"></div>
           <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] overflow-hidden">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -80,7 +110,7 @@ function App() {
     )
   }
 
-  // --- VIEW: ERROR ---
+  // --- VIEW 2: ERROR SCREEN ---
   if (pesanError) {
     return (
       <div className="text-center mt-16 font-sans bg-[var(--background)] min-h-screen pt-10 transition-colors duration-300 text-[var(--text-main)]">
@@ -90,7 +120,7 @@ function App() {
     )
   }
 
-  // --- VIEW: MAIN DASHBOARD ---
+  // --- VIEW 3: MAIN DASHBOARD ---
   const dataGrafik = ringkasan ? [
     { name: 'Positif', value: ringkasan.Positif || 0, color: '#22c55e' }, 
     { name: 'Negatif', value: ringkasan.Negatif || 0, color: '#ef4444' }, 
@@ -115,19 +145,25 @@ function App() {
           </button>
         </div>
         
-        {/* RINGKASAN CARDS */}
+        {/* RINGKASAN CARDS (Dengan Animasi Angka) */}
         <div className="flex flex-col md:flex-row gap-6 mb-10 text-white">
           <div className="flex-1 p-6 bg-green-500 rounded-2xl shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg font-medium opacity-90 m-0">Positif</h3>
-            <p className="text-5xl font-extrabold mt-2 tracking-tight">{ringkasan?.Positif || 0}</p>
+            <p className="text-5xl font-extrabold mt-2 tracking-tight">
+              <AnimatedNumber value={ringkasan?.Positif || 0} />
+            </p>
           </div>
           <div className="flex-1 p-6 bg-red-500 rounded-2xl shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg font-medium opacity-90 m-0">Negatif</h3>
-            <p className="text-5xl font-extrabold mt-2 tracking-tight">{ringkasan?.Negatif || 0}</p>
+            <p className="text-5xl font-extrabold mt-2 tracking-tight">
+              <AnimatedNumber value={ringkasan?.Negatif || 0} />
+            </p>
           </div>
           <div className="flex-1 p-6 bg-gray-500 rounded-2xl shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg font-medium opacity-90 m-0">Netral</h3>
-            <p className="text-5xl font-extrabold mt-2 tracking-tight">{ringkasan?.Netral || 0}</p>
+            <p className="text-5xl font-extrabold mt-2 tracking-tight">
+              <AnimatedNumber value={ringkasan?.Netral || 0} />
+            </p>
           </div>
         </div>
 
@@ -169,7 +205,7 @@ function App() {
           <div>
             <h2 className="text-2xl font-bold">Detail Data Teks</h2>
             <p className="text-gray-500 text-sm">
-              Menampilkan <span className="font-bold text-blue-500">{dataTerfilter.length}</span> hasil
+              Menampilkan <span className="font-bold text-blue-500"><AnimatedNumber value={dataTerfilter.length} /></span> hasil
             </p>
           </div>
 

@@ -9,7 +9,7 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Efek Sakelar Dark Mode
+  // 1. Logika Dark Mode (Sesuai v4 yang kita ulik)
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -18,7 +18,7 @@ function App() {
     }
   }, [isDarkMode])
 
-  // Fetch Data dari Hugging Face
+  // 2. Fetch Data
   useEffect(() => {
     fetch('https://akbarabay-sentimen.hf.space/api/summary')
       .then(res => res.json())
@@ -33,7 +33,8 @@ function App() {
       .then(data => {
         if (data.status === 'error') throw new Error(data.pesan)
         setKutipan(data.data || [])
-        setLoading(false)
+        // Simulasi loading sedikit lebih lama (opsional: hapus setTimeout jika ingin instan)
+        setTimeout(() => setLoading(false), 800) 
       })
       .catch(err => {
         setPesanError(err.message)
@@ -41,28 +42,55 @@ function App() {
       })
   }, [])
 
-  // Logika Filter Pencarian
+  // 3. Logika Filter Pencarian
   const dataTerfilter = kutipan.filter((item) => {
     return item.Kutipan.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  if (pesanError) {
-    return (
-      <div className="text-center mt-16 font-sans bg-[var(--background)] min-h-screen pt-10 transition-colors duration-300">
-        <h1 className="text-3xl font-bold text-red-500 mb-2">❌ Gagal Mengambil Data</h1>
-        <p className="text-[var(--text-main)]">Pesan dari server: <span className="font-semibold">{pesanError}</span></p>
-      </div>
-    )
-  }
-
+  // --- VIEW: LOADING (SKELETON SCREEN) ---
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-[var(--background)] transition-colors duration-300">
-        <h2 className="text-2xl font-semibold text-gray-500 animate-pulse font-sans">⏳ Menyiapkan Dashboard...</h2>
+      <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] transition-colors duration-300">
+        <div className="max-w-6xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="flex justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8">
+            <div className="h-10 w-64 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
+          </div>
+          {/* Cards Skeleton */}
+          <div className="flex flex-col md:flex-row gap-6 mb-10">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex-1 h-32 bg-gray-300 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
+            ))}
+          </div>
+          {/* Chart Skeleton */}
+          <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] mb-10 h-[400px] flex flex-col items-center justify-center">
+            <div className="h-6 w-48 bg-gray-300 dark:bg-gray-700 rounded mb-8 animate-pulse"></div>
+            <div className="w-56 h-56 rounded-full border-[20px] border-gray-200 dark:border-gray-700 animate-pulse"></div>
+          </div>
+          {/* Table Skeleton */}
+          <div className="h-8 w-40 bg-gray-300 dark:bg-gray-700 rounded mb-4 animate-pulse"></div>
+          <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] overflow-hidden">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 border-b border-[var(--border-color)] bg-gray-200/50 dark:bg-gray-700/30 animate-pulse"></div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
 
+  // --- VIEW: ERROR ---
+  if (pesanError) {
+    return (
+      <div className="text-center mt-16 font-sans bg-[var(--background)] min-h-screen pt-10 transition-colors duration-300 text-[var(--text-main)]">
+        <h1 className="text-3xl font-bold text-red-500 mb-2">❌ Gagal Mengambil Data</h1>
+        <p>Pesan dari server: <span className="font-semibold">{pesanError}</span></p>
+      </div>
+    )
+  }
+
+  // --- VIEW: MAIN DASHBOARD ---
   const dataGrafik = ringkasan ? [
     { name: 'Positif', value: ringkasan.Positif || 0, color: '#22c55e' }, 
     { name: 'Negatif', value: ringkasan.Negatif || 0, color: '#ef4444' }, 
@@ -71,23 +99,23 @@ function App() {
 
   return (
     <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] text-[var(--text-main)] transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto animate-in fade-in duration-700">
         
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-0 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-0 tracking-tight text-[var(--text-main)]">
             📊 Dashboard Analisis Sentimen
           </h1>
           
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="flex items-center gap-2 px-6 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-sm hover:shadow-md active:scale-95 transition-all font-medium"
+            className="flex items-center gap-2 px-6 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-main)] rounded-full shadow-sm hover:shadow-md active:scale-95 transition-all font-medium"
           >
             {isDarkMode ? '☀️ Mode Terang' : '🌙 Mode Gelap'}
           </button>
         </div>
         
-        {/* RINGKASAN CARDS (Tetap Menggunakan Warna Statis Karena Memang Desainnya Berwarna) */}
+        {/* RINGKASAN CARDS */}
         <div className="flex flex-col md:flex-row gap-6 mb-10 text-white">
           <div className="flex-1 p-6 bg-green-500 rounded-2xl shadow-lg hover:shadow-xl transition-all">
             <h3 className="text-lg font-medium opacity-90 m-0">Positif</h3>
@@ -152,7 +180,7 @@ function App() {
               placeholder="Cari kutipan..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm transition-all text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm transition-all text-sm text-[var(--text-main)]"
             />
           </div>
         </div>
@@ -170,8 +198,8 @@ function App() {
               {dataTerfilter.length > 0 ? (
                 dataTerfilter.slice(0, 15).map((baris, index) => (
                   <tr key={index} className="border-b border-[var(--border-color)] hover:bg-gray-400/5 transition-colors">
-                    <td className="p-4 text-sm leading-relaxed opacity-80">"{baris.Kutipan}"</td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-sm leading-relaxed opacity-80 italic text-[var(--text-main)]">"{baris.Kutipan}"</td>
+                    <td className="p-4 text-center text-[var(--text-main)]">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest
                         ${baris.Label_Sentimen === 'Positif' ? 'bg-green-500/20 text-green-500' : 
                           baris.Label_Sentimen === 'Negatif' ? 'bg-red-500/20 text-red-500' : 
@@ -185,7 +213,7 @@ function App() {
               ) : (
                 <tr>
                   <td colSpan="2" className="p-10 text-center text-gray-500 italic">
-                    ❌ Kata "{searchTerm}" tidak ditemukan dalam data.
+                    ❌ Kata "{searchTerm}" tidak ditemukan.
                   </td>
                 </tr>
               )}

@@ -6,11 +6,8 @@ function App() {
   const [kutipan, setKutipan] = useState([])
   const [loading, setLoading] = useState(true)
   const [pesanError, setPesanError] = useState(null)
-  
-  // State baru untuk Dark Mode (Secara bawaan: false / mode terang)
   const [isDarkMode, setIsDarkMode] = useState(false)
 
-  // Efek ini akan menyuntikkan kelas 'dark' ke tag <html> setiap kali tombol diklik
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -43,7 +40,7 @@ function App() {
 
   if (pesanError) {
     return (
-      <div className="text-center mt-16 font-sans">
+      <div className="text-center mt-16 font-sans dark:bg-gray-900 min-h-screen pt-10">
         <h1 className="text-3xl font-bold text-red-500 mb-2">❌ Gagal Mengambil Data</h1>
         <p className="text-gray-700 dark:text-gray-300">Pesan dari server: <span className="font-semibold">{pesanError}</span></p>
       </div>
@@ -52,7 +49,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen dark:bg-gray-900 transition-colors duration-300">
+      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <h2 className="text-2xl font-semibold text-gray-600 dark:text-gray-300 animate-pulse">⏳ Menyiapkan Dashboard...</h2>
       </div>
     )
@@ -65,17 +62,14 @@ function App() {
   ] : []
 
   return (
-    {/* Background utama berubah menjadi abu-abu sangat gelap (gray-900) saat dark mode */}
     <div className="p-6 md:p-10 font-sans min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
         
-        {/* BAGIAN HEADER (Judul & Tombol Dark Mode) */}
         <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-gray-200 dark:border-gray-700 pb-4 mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">
             📊 Dashboard Analisis Sentimen
           </h1>
           
-          {/* Tombol Sakelar Dark Mode */}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
             className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-full shadow-sm hover:shadow-md transition-all font-medium"
@@ -84,7 +78,6 @@ function App() {
           </button>
         </div>
         
-        {/* KARTU RINGKASAN */}
         <div className="flex flex-col md:flex-row gap-6 mb-10">
           <div className="flex-1 p-6 bg-green-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
             <h3 className="text-lg font-medium opacity-90 m-0">Positif</h3>
@@ -102,8 +95,6 @@ function App() {
           </div>
         </div>
 
-        {/* KOMPONEN GRAFIK */}
-        {/* Kotak grafik berubah menjadi gelap (gray-800) saat dark mode */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 mb-10 h-[400px] transition-colors duration-300">
           <h2 className="text-center text-xl font-bold text-gray-700 dark:text-gray-200 mb-4">Distribusi Sentimen Kutipan</h2>
           <ResponsiveContainer width="100%" height="100%">
@@ -116,13 +107,12 @@ function App() {
                 outerRadius={120}
                 paddingAngle={5}
                 dataKey="value"
-                stroke="none" // Menghilangkan garis putih standar Recharts pada potongan pie
+                stroke="none"
               >
                 {dataGrafik.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              {/* Tooltip menyesuaikan tema */}
               <Tooltip 
                 contentStyle={{ 
                   borderRadius: '10px', 
@@ -137,7 +127,6 @@ function App() {
           </ResponsiveContainer>
         </div>
 
-        {/* TABEL DATA */}
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Detail Data Teks</h2>
         <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 mb-4 transition-colors duration-300">
           <table className="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">

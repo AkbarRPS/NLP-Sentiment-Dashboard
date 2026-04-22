@@ -41,21 +41,40 @@ function App() {
   const [pesanError, setPesanError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // FITUR BARU: AUTO-THEMING BERDASARKAN JAM
+  // Auto-Theming
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Mengambil jam dari perangkat user (0-23)
     const jamSaatIni = new Date().getHours();
-    // Jika jam 17:00 (5 sore) ke atas, atau di bawah jam 05:00 pagi, otomatis mode gelap (true)
     return jamSaatIni >= 17 || jamSaatIni < 5;
   })
 
-  // State untuk Fitur Live Inference
+  // State Live Inference
   const [inputText, setInputText] = useState('')
   const [hasilSimulasi, setHasilSimulasi] = useState(null)
   const [skorKepercayaan, setSkorKepercayaan] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  // Sinkronisasi Dark Mode ke Tag HTML
+  // FITUR BARU: STATE UNTUK MODAL PENJELASAN
+  const [infoModal, setInfoModal] = useState(null)
+
+  // Data Penjelasan Sentimen
+  const penjelasanDetail = {
+    Positif: { 
+      ikon: '😊', 
+      warna: 'text-green-500',
+      teks: 'Sentimen Positif menunjukkan bahwa ulasan atau kutipan mengandung emosi, opini, atau penilaian yang baik dan mendukung. Biasanya ditandai dengan kata-kata pujian, kepuasan, atau antusiasme (contoh: "bagus", "keren", "membantu").'
+    },
+    Negatif: { 
+      ikon: '😟', 
+      warna: 'text-red-500',
+      teks: 'Sentimen Negatif menunjukkan adanya ketidakpuasan, kritik, atau emosi yang kurang baik. Kutipan ini sering memuat keluhan atau kekecewaan terhadap suatu sistem atau layanan (contoh: "lambat", "error", "buruk").'
+    },
+    Netral: { 
+      ikon: '😐', 
+      warna: 'text-slate-500',
+      teks: 'Sentimen Netral berarti kutipan tersebut bersifat objektif, informatif, atau sekadar pernyataan fakta. Tidak ada emosi positif maupun negatif yang dominan di dalamnya.'
+    }
+  }
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -64,7 +83,6 @@ function App() {
     }
   }, [isDarkMode])
 
-  // Fetch Data dari API
   useEffect(() => {
     fetch('https://akbarabay-sentimen.hf.space/api/summary')
       .then(res => res.json())
@@ -82,7 +100,6 @@ function App() {
         const fetchedData = data.data || [];
         setKutipan(fetchedData);
 
-        // --- LOGIKA MOCK DATES UNTUK GRAFIK GARIS ---
         const trenData = [];
         for (let i = 6; i >= 0; i--) {
           const d = new Date();
@@ -109,12 +126,10 @@ function App() {
       })
   }, [])
 
-  // Logika Filter Pencarian
   const dataTerfilter = kutipan.filter((item) => {
     return item.Kutipan.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Handlers Export CSV
   const handleExportCSV = () => {
     let csvContent = "Kutipan,Label Sentimen\n";
     dataTerfilter.forEach(row => {
@@ -131,7 +146,6 @@ function App() {
     document.body.removeChild(link);
   }
 
-  // Handlers Live Inference
   const handleAnalisis = () => {
     setIsAnalyzing(true);
     setHasilSimulasi(null);
@@ -162,7 +176,6 @@ function App() {
     setSkorKepercayaan(null);
   }
 
-  // --- VIEW: LOADING SKELETON ---
   if (loading) {
     return (
       <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] transition-colors duration-300">
@@ -205,7 +218,7 @@ function App() {
   ] : []
 
   return (
-    <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] text-[var(--text-main)] transition-colors duration-300">
+    <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] text-[var(--text-main)] transition-colors duration-300 relative">
       <div className="max-w-7xl mx-auto animate-in fade-in duration-700">
         
         {/* HEADER & SAKLAR TEMA */}
@@ -226,9 +239,13 @@ function App() {
           </div>
         </div>
         
-        {/* RINGKASAN CARDS */}
+        {/* RINGKASAN CARDS (SEKARANG BISA DIKLIK) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-white">
-          <div className="p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.02] transition-all border border-green-400/20">
+          <div 
+            onClick={() => setInfoModal('Positif')}
+            className="p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.05] transition-all border border-green-400/20 cursor-pointer"
+            title="Klik untuk melihat penjelasan"
+          >
             <span className="text-4xl mb-2 drop-shadow-md">😊</span>
             <h3 className="text-sm font-medium opacity-90 m-0 uppercase tracking-widest">Positif</h3>
             <p className="text-5xl font-black mt-1 tracking-tighter">
@@ -236,7 +253,11 @@ function App() {
             </p>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.02] transition-all border border-red-400/20">
+          <div 
+            onClick={() => setInfoModal('Negatif')}
+            className="p-6 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.05] transition-all border border-red-400/20 cursor-pointer"
+            title="Klik untuk melihat penjelasan"
+          >
             <span className="text-4xl mb-2 drop-shadow-md">😟</span>
             <h3 className="text-sm font-medium opacity-90 m-0 uppercase tracking-widest">Negatif</h3>
             <p className="text-5xl font-black mt-1 tracking-tighter">
@@ -244,7 +265,11 @@ function App() {
             </p>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-slate-500 to-slate-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.02] transition-all border border-slate-400/20">
+          <div 
+            onClick={() => setInfoModal('Netral')}
+            className="p-6 bg-gradient-to-br from-slate-500 to-slate-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.05] transition-all border border-slate-400/20 cursor-pointer"
+            title="Klik untuk melihat penjelasan"
+          >
             <span className="text-4xl mb-2 drop-shadow-md">😐</span>
             <h3 className="text-sm font-medium opacity-90 m-0 uppercase tracking-widest">Netral</h3>
             <p className="text-5xl font-black mt-1 tracking-tighter">
@@ -253,37 +278,23 @@ function App() {
           </div>
         </div>
 
-        {/* ---------------- GRAFIK SECTION (GRID 2 KOLOM) ---------------- */}
+        {/* ---------------- GRAFIK SECTION ---------------- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-          
-          {/* 1. Grafik Pie (Distribusi) */}
           <div className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-[var(--border-color)] h-[450px] transition-colors duration-300">
             <h2 className="text-center text-xl font-bold mb-6">Distribusi Statistik Data</h2>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={dataGrafikPie}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={120}
-                  paddingAngle={8}
-                  dataKey="value"
-                  stroke="none"
-                >
+                <Pie data={dataGrafikPie} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={8} dataKey="value" stroke="none">
                   {dataGrafikPie.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
-                />
+                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
                 <Legend verticalAlign="bottom" height={40} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* 2. Grafik Garis (Tren Waktu) */}
           <div className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-[var(--border-color)] h-[450px] transition-colors duration-300">
             <h2 className="text-center text-xl font-bold mb-6">Tren Sentimen (7 Hari Terakhir)</h2>
             <ResponsiveContainer width="100%" height="80%">
@@ -291,9 +302,7 @@ function App() {
                 <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} vertical={false} />
                 <XAxis dataKey="name" stroke={isDarkMode ? '#9ca3af' : '#6b7280'} tick={{fontSize: 12}} tickMargin={10} axisLine={false} />
                 <YAxis stroke={isDarkMode ? '#9ca3af' : '#6b7280'} tick={{fontSize: 12}} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                />
+                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
                 <Legend verticalAlign="bottom" height={20} wrapperStyle={{ paddingTop: '20px' }} />
                 <Line type="monotone" dataKey="Positif" stroke="#22c55e" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 <Line type="monotone" dataKey="Negatif" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
@@ -301,9 +310,7 @@ function App() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-
         </div>
-        {/* ---------------- AKHIR GRAFIK SECTION ---------------- */}
 
         {/* LIVE INFERENCE */}
         <div className="bg-[var(--card-bg)] p-6 rounded-3xl shadow-sm border border-[var(--border-color)] mb-10 transition-colors duration-300">
@@ -319,18 +326,10 @@ function App() {
                 className="w-full p-5 bg-[var(--background)] border border-[var(--border-color)] rounded-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none h-36 transition-all text-[var(--text-main)]"
               ></textarea>
               <div className="flex flex-wrap gap-3 mt-4">
-                <button
-                  onClick={handleAnalisis}
-                  disabled={!inputText.trim() || isAnalyzing}
-                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold rounded-2xl shadow-md transition-all active:scale-95"
-                >
+                <button onClick={handleAnalisis} disabled={!inputText.trim() || isAnalyzing} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold rounded-2xl shadow-md transition-all active:scale-95">
                   {isAnalyzing ? '⏳ Menganalisis...' : '✨ Cek Sentimen'}
                 </button>
-                <button
-                  onClick={handleReset}
-                  disabled={!inputText.trim() && !hasilSimulasi}
-                  className="px-8 py-3 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border border-[var(--border-color)] text-[var(--text-main)] font-medium rounded-2xl transition-all"
-                >
+                <button onClick={handleReset} disabled={!inputText.trim() && !hasilSimulasi} className="px-8 py-3 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border border-[var(--border-color)] text-[var(--text-main)] font-medium rounded-2xl transition-all">
                   🗑️ Reset
                 </button>
               </div>
@@ -345,10 +344,7 @@ function App() {
               ) : hasilSimulasi ? (
                 <div className="text-center animate-in zoom-in duration-300">
                   <p className="text-xs opacity-50 uppercase tracking-widest mb-3">Hasil Prediksi</p>
-                  <div className={`text-2xl font-black px-6 py-2 rounded-2xl border-2 mb-4 inline-block
-                    ${hasilSimulasi === 'Positif' ? 'text-green-500 border-green-500/20 bg-green-500/10' : 
-                      hasilSimulasi === 'Negatif' ? 'text-red-500 border-red-500/20 bg-red-500/10' : 
-                      'text-gray-500 border-gray-500/20 bg-gray-500/10'}`}>
+                  <div className={`text-2xl font-black px-6 py-2 rounded-2xl border-2 mb-4 inline-block ${hasilSimulasi === 'Positif' ? 'text-green-500 border-green-500/20 bg-green-500/10' : hasilSimulasi === 'Negatif' ? 'text-red-500 border-red-500/20 bg-red-500/10' : 'text-gray-500 border-gray-500/20 bg-gray-500/10'}`}>
                     {hasilSimulasi}
                   </div>
                   <p className="text-xs opacity-50">Tingkat Kepercayaan: <span className="font-bold text-indigo-500">{skorKepercayaan}%</span></p>
@@ -369,18 +365,9 @@ function App() {
           <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
               <span className="absolute left-4 top-2.5 opacity-30">🔍</span>
-              <input
-                type="text"
-                placeholder="Cari kutipan..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-sm"
-              />
+              <input type="text" placeholder="Cari kutipan..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-2.5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-sm" />
             </div>
-            <button 
-              onClick={handleExportCSV}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-2xl shadow-md transition-all active:scale-95 flex items-center gap-2"
-            >
+            <button onClick={handleExportCSV} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-2xl shadow-md transition-all active:scale-95 flex items-center gap-2">
               📥 Export CSV
             </button>
           </div>
@@ -401,11 +388,7 @@ function App() {
                   <tr key={index} className="border-b border-[var(--border-color)] hover:bg-gray-400/5 transition-all">
                     <td className="p-6 text-sm opacity-80 italic leading-relaxed">"{baris.Kutipan}"</td>
                     <td className="p-6 text-center">
-                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter border
-                        ${baris.Label_Sentimen === 'Positif' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
-                          baris.Label_Sentimen === 'Negatif' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
-                          'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}
-                      >
+                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter border ${baris.Label_Sentimen === 'Positif' ? 'bg-green-500/10 text-green-500 border-green-500/20' : baris.Label_Sentimen === 'Negatif' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}>
                         {baris.Label_Sentimen}
                       </span>
                     </td>
@@ -420,6 +403,42 @@ function App() {
           </table>
         </div>
       </div>
+
+      {/* POP-UP MODAL PENJELASAN */}
+      {infoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-[var(--card-bg)] text-[var(--text-main)] p-8 rounded-3xl shadow-2xl max-w-md w-full relative border border-[var(--border-color)] transform animate-in zoom-in-95 duration-300">
+            {/* Tombol Close */}
+            <button 
+              onClick={() => setInfoModal(null)}
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-red-500 hover:text-white transition-colors"
+            >
+              ✖
+            </button>
+            
+            {/* Konten Modal */}
+            <div className="text-center mb-4">
+              <span className="text-6xl drop-shadow-md">{penjelasanDetail[infoModal].ikon}</span>
+            </div>
+            <h3 className={`text-2xl font-black text-center mb-3 ${penjelasanDetail[infoModal].warna}`}>
+              Sentimen {infoModal}
+            </h3>
+            <div className="w-16 h-1 bg-gray-300 dark:bg-gray-700 mx-auto rounded-full mb-6"></div>
+            <p className="text-center opacity-80 leading-relaxed">
+              {penjelasanDetail[infoModal].teks}
+            </p>
+            
+            <div className="mt-8">
+              <button 
+                onClick={() => setInfoModal(null)}
+                className="w-full py-3 bg-[var(--background)] border border-[var(--border-color)] rounded-xl font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

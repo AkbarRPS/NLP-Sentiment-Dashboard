@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-// 1. Tambahkan import komponen LineChart dari recharts
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 // --- KOMPONEN ANIMASI ANGKA ---
@@ -37,11 +36,18 @@ function AnimatedNumber({ value }) {
 function App() {
   const [ringkasan, setRingkasan] = useState(null)
   const [kutipan, setKutipan] = useState([])
-  const [dataTren, setDataTren] = useState([]) // State baru untuk data grafik garis
+  const [dataTren, setDataTren] = useState([])
   const [loading, setLoading] = useState(true)
   const [pesanError, setPesanError] = useState(null)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+
+  // FITUR BARU: AUTO-THEMING BERDASARKAN JAM
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Mengambil jam dari perangkat user (0-23)
+    const jamSaatIni = new Date().getHours();
+    // Jika jam 17:00 (5 sore) ke atas, atau di bawah jam 05:00 pagi, otomatis mode gelap (true)
+    return jamSaatIni >= 17 || jamSaatIni < 5;
+  })
 
   // State untuk Fitur Live Inference
   const [inputText, setInputText] = useState('')
@@ -49,7 +55,7 @@ function App() {
   const [skorKepercayaan, setSkorKepercayaan] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  // Sinkronisasi Dark Mode
+  // Sinkronisasi Dark Mode ke Tag HTML
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -58,7 +64,7 @@ function App() {
     }
   }, [isDarkMode])
 
-  // Fetch Data
+  // Fetch Data dari API
   useEffect(() => {
     fetch('https://akbarabay-sentimen.hf.space/api/summary')
       .then(res => res.json())
@@ -77,7 +83,6 @@ function App() {
         setKutipan(fetchedData);
 
         // --- LOGIKA MOCK DATES UNTUK GRAFIK GARIS ---
-        // Kita buat data 7 hari terakhir secara otomatis
         const trenData = [];
         for (let i = 6; i >= 0; i--) {
           const d = new Date();
@@ -88,7 +93,6 @@ function App() {
           });
         }
         
-        // Sebarkan data kutipan ke dalam 7 hari tersebut
         fetchedData.forEach((item, index) => {
           const dayIndex = index % 7; 
           if(trenData[dayIndex] && item.Label_Sentimen) {
@@ -110,7 +114,7 @@ function App() {
     return item.Kutipan.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Handlers
+  // Handlers Export CSV
   const handleExportCSV = () => {
     let csvContent = "Kutipan,Label Sentimen\n";
     dataTerfilter.forEach(row => {
@@ -127,6 +131,7 @@ function App() {
     document.body.removeChild(link);
   }
 
+  // Handlers Live Inference
   const handleAnalisis = () => {
     setIsAnalyzing(true);
     setHasilSimulasi(null);
@@ -171,7 +176,6 @@ function App() {
               <div key={i} className="h-40 bg-gray-300 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
             ))}
           </div>
-          {/* Skeleton untuk 2 Grafik */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
             <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] h-[400px] flex flex-col items-center justify-center animate-pulse">
               <div className="w-56 h-56 rounded-full border-[20px] border-gray-200 dark:border-gray-700"></div>
@@ -204,7 +208,7 @@ function App() {
     <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] text-[var(--text-main)] transition-colors duration-300">
       <div className="max-w-7xl mx-auto animate-in fade-in duration-700">
         
-        {/* HEADER */}
+        {/* HEADER & SAKLAR TEMA */}
         <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8 gap-4">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-main)]">
             📊 Dashboard Analisis Sentimen
@@ -254,7 +258,7 @@ function App() {
           
           {/* 1. Grafik Pie (Distribusi) */}
           <div className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-[var(--border-color)] h-[450px] transition-colors duration-300">
-            <h2 className="text-center text-xl font-bold mb-6">Distribusi Proporsi Sentimen</h2>
+            <h2 className="text-center text-xl font-bold mb-6">Distribusi Statistik Data</h2>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

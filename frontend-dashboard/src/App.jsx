@@ -41,6 +41,11 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
+  // State Baru untuk Fitur Mock-up Live Inference
+  const [inputText, setInputText] = useState('')
+  const [hasilSimulasi, setHasilSimulasi] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -75,32 +80,42 @@ function App() {
     return item.Kutipan.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // --- LOGIKA EXPORT CSV (BARU) ---
   const handleExportCSV = () => {
-    // 1. Buat Baris Header CSV
     let csvContent = "Kutipan,Label Sentimen\n";
-
-    // 2. Looping data yang sedang tampil (terfilter)
     dataTerfilter.forEach(row => {
-      // Bersihkan teks dari tanda kutip ganda agar format CSV tidak rusak
       let teksBersih = row.Kutipan.replace(/"/g, '""');
-      // Tambahkan ke string CSV
       csvContent += `"${teksBersih}","${row.Label_Sentimen}"\n`;
     });
-
-    // 3. Buat file virtual di memori browser
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-
-    // 4. Buat tag <a> tersembunyi untuk memicu download otomatis
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", `Data_Sentimen_${searchTerm ? 'Filtered' : 'All'}.csv`);
     document.body.appendChild(link);
     link.click();
-    
-    // 5. Bersihkan jejak
     document.body.removeChild(link);
+  }
+
+  // Logika Simulasi Analisis Teks (Mock-up)
+  const handleAnalisis = () => {
+    setIsAnalyzing(true);
+    setHasilSimulasi(null);
+
+    // Simulasi delay seolah-olah sedang mengirim data ke server AI (1.5 detik)
+    setTimeout(() => {
+      const teks = inputText.toLowerCase();
+      let hasil = 'Netral';
+
+      // Pura-pura mendeteksi kata kunci
+      if (teks.includes('bagus') || teks.includes('keren') || teks.includes('suka') || teks.includes('mantap')) {
+        hasil = 'Positif';
+      } else if (teks.includes('jelek') || teks.includes('kecewa') || teks.includes('buruk') || teks.includes('marah')) {
+        hasil = 'Negatif';
+      }
+
+      setHasilSimulasi(hasil);
+      setIsAnalyzing(false);
+    }, 1500);
   }
 
   if (loading) {
@@ -119,12 +134,6 @@ function App() {
           <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] mb-10 h-[400px] flex flex-col items-center justify-center">
             <div className="h-6 w-48 bg-gray-300 dark:bg-gray-700 rounded mb-8 animate-pulse"></div>
             <div className="w-56 h-56 rounded-full border-[20px] border-gray-200 dark:border-gray-700 animate-pulse"></div>
-          </div>
-          <div className="h-8 w-40 bg-gray-300 dark:bg-gray-700 rounded mb-4 animate-pulse"></div>
-          <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] overflow-hidden">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-16 border-b border-[var(--border-color)] bg-gray-200/50 dark:bg-gray-700/30 animate-pulse"></div>
-            ))}
           </div>
         </div>
       </div>
@@ -186,6 +195,57 @@ function App() {
           </div>
         </div>
 
+        {/* FITUR LIVE INFERENCE (MOCK-UP) */}
+        <div className="bg-[var(--card-bg)] p-6 rounded-2xl shadow-md border border-[var(--border-color)] mb-10 transition-colors duration-300">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>🤖</span> Coba Analisis Kalimatmu (BETA)
+          </h2>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Ketik kalimat tentang pengalamanmu di sini... (Contoh: Website ini keren banget!)"
+                className="w-full p-4 bg-[var(--background)] border border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none h-32 transition-colors text-sm text-[var(--text-main)]"
+              ></textarea>
+              <button
+                onClick={handleAnalisis}
+                disabled={!inputText.trim() || isAnalyzing}
+                className="mt-4 w-full md:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                {isAnalyzing ? '⏳ Menganalisis Pola...' : '✨ Analisis Sekarang'}
+              </button>
+            </div>
+
+            {/* Kotak Hasil Analisis */}
+            <div className="w-full md:w-1/3 bg-[var(--background)] border border-[var(--border-color)] rounded-xl p-6 flex flex-col justify-center items-center transition-colors min-h-[160px]">
+              {isAnalyzing ? (
+                <div className="flex flex-col items-center animate-pulse">
+                  <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+                  <p className="text-sm text-gray-500">Memproses teks...</p>
+                </div>
+              ) : hasilSimulasi ? (
+                <div className="text-center animate-in zoom-in duration-300">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Hasil Prediksi AI</p>
+                  <span className={`px-5 py-2 rounded-full text-sm font-extrabold uppercase tracking-widest inline-block mb-3 border
+                    ${hasilSimulasi === 'Positif' ? 'bg-green-500/20 text-green-500 border-green-500/30' : 
+                      hasilSimulasi === 'Negatif' ? 'bg-red-500/20 text-red-500 border-red-500/30' : 
+                      'bg-gray-500/20 text-gray-500 border-gray-500/30'}`}
+                  >
+                    {hasilSimulasi}
+                  </span>
+                  <p className="text-xs text-gray-400">Skor Kepercayaan: <span className="font-bold text-[var(--text-main)]">98.4%</span></p>
+                </div>
+              ) : (
+                <div className="text-center opacity-40">
+                  <span className="text-4xl block mb-2 grayscale">🧠</span>
+                  <p className="text-sm italic">Hasil analisis akan muncul di sini</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* GRAFIK DISTRIBUSI */}
         <div className="bg-[var(--card-bg)] p-6 rounded-2xl shadow-md border border-[var(--border-color)] mb-10 h-[400px] transition-colors duration-300">
           <h2 className="text-center text-xl font-bold mb-4">Distribusi Sentimen Kutipan</h2>
@@ -229,7 +289,6 @@ function App() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            {/* Input Search */}
             <div className="w-full sm:w-64 relative">
               <span className="absolute left-4 top-2.5 opacity-50">🔍</span>
               <input
@@ -241,7 +300,6 @@ function App() {
               />
             </div>
             
-            {/* Tombol Export */}
             <button 
               onClick={handleExportCSV}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"

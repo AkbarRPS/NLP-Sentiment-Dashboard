@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+// 1. Tambahkan import komponen LineChart dari recharts
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 // --- KOMPONEN ANIMASI ANGKA ---
 function AnimatedNumber({ value }) {
@@ -36,6 +37,7 @@ function AnimatedNumber({ value }) {
 function App() {
   const [ringkasan, setRingkasan] = useState(null)
   const [kutipan, setKutipan] = useState([])
+  const [dataTren, setDataTren] = useState([]) // State baru untuk data grafik garis
   const [loading, setLoading] = useState(true)
   const [pesanError, setPesanError] = useState(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -70,7 +72,31 @@ function App() {
       .then(res => res.json())
       .then(data => {
         if (data.status === 'error') throw new Error(data.pesan)
-        setKutipan(data.data || [])
+        
+        const fetchedData = data.data || [];
+        setKutipan(fetchedData);
+
+        // --- LOGIKA MOCK DATES UNTUK GRAFIK GARIS ---
+        // Kita buat data 7 hari terakhir secara otomatis
+        const trenData = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          trenData.push({ 
+            name: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }), 
+            Positif: 0, Negatif: 0, Netral: 0 
+          });
+        }
+        
+        // Sebarkan data kutipan ke dalam 7 hari tersebut
+        fetchedData.forEach((item, index) => {
+          const dayIndex = index % 7; 
+          if(trenData[dayIndex] && item.Label_Sentimen) {
+             trenData[dayIndex][item.Label_Sentimen] += 1;
+          }
+        });
+        
+        setDataTren(trenData);
         setTimeout(() => setLoading(false), 800) 
       })
       .catch(err => {
@@ -135,19 +161,24 @@ function App() {
   if (loading) {
     return (
       <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] transition-colors duration-300">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8">
             <div className="h-10 w-64 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-            <div className="h-10 w-32 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
+            <div className="h-8 w-24 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-40 bg-gray-300 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
             ))}
           </div>
-          <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] mb-10 h-[400px] flex flex-col items-center justify-center animate-pulse">
-            <div className="h-6 w-48 bg-gray-300 dark:bg-gray-700 rounded mb-8"></div>
-            <div className="w-56 h-56 rounded-full border-[20px] border-gray-200 dark:border-gray-700"></div>
+          {/* Skeleton untuk 2 Grafik */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] h-[400px] flex flex-col items-center justify-center animate-pulse">
+              <div className="w-56 h-56 rounded-full border-[20px] border-gray-200 dark:border-gray-700"></div>
+            </div>
+            <div className="bg-[var(--card-bg)] p-6 rounded-2xl border border-[var(--border-color)] h-[400px] flex flex-col items-center justify-end animate-pulse">
+               <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -163,7 +194,7 @@ function App() {
     )
   }
 
-  const dataGrafik = ringkasan ? [
+  const dataGrafikPie = ringkasan ? [
     { name: 'Positif', value: ringkasan.Positif || 0, color: '#22c55e' }, 
     { name: 'Negatif', value: ringkasan.Negatif || 0, color: '#ef4444' }, 
     { name: 'Netral', value: ringkasan.Netral || 0, color: '#9ca3af' }  
@@ -171,22 +202,27 @@ function App() {
 
   return (
     <div className="p-6 md:p-10 font-sans min-h-screen bg-[var(--background)] text-[var(--text-main)] transition-colors duration-300">
-      <div className="max-w-6xl mx-auto animate-in fade-in duration-700">
+      <div className="max-w-7xl mx-auto animate-in fade-in duration-700">
         
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-0 tracking-tight text-[var(--text-main)]">
+        <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8 gap-4">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-main)]">
             📊 Dashboard Analisis Sentimen
           </h1>
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="flex items-center gap-2 px-6 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-main)] rounded-full shadow-sm hover:shadow-md active:scale-95 transition-all font-medium"
-          >
-            {isDarkMode ? '☀️ Mode Terang' : '🌙 Mode Gelap'}
-          </button>
+          
+          <div className="flex items-center gap-3 bg-[var(--card-bg)] px-4 py-2 rounded-full border border-[var(--border-color)] shadow-sm">
+            <span className={`text-sm transition-opacity duration-300 ${isDarkMode ? 'opacity-40 grayscale' : 'opacity-100'}`}>☀️</span>
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${isDarkMode ? 'bg-indigo-600' : 'bg-gray-300'}`}
+            >
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out ${isDarkMode ? 'translate-x-8' : 'translate-x-1'}`} />
+            </button>
+            <span className={`text-sm transition-opacity duration-300 ${!isDarkMode ? 'opacity-40 grayscale' : 'opacity-100'}`}>🌙</span>
+          </div>
         </div>
         
-        {/* RINGKASAN CARDS (DEKORASI BARU DENGAN GRADIEN & IKON) */}
+        {/* RINGKASAN CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-white">
           <div className="p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.02] transition-all border border-green-400/20">
             <span className="text-4xl mb-2 drop-shadow-md">😊</span>
@@ -212,6 +248,58 @@ function App() {
             </p>
           </div>
         </div>
+
+        {/* ---------------- GRAFIK SECTION (GRID 2 KOLOM) ---------------- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          
+          {/* 1. Grafik Pie (Distribusi) */}
+          <div className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-[var(--border-color)] h-[450px] transition-colors duration-300">
+            <h2 className="text-center text-xl font-bold mb-6">Distribusi Proporsi Sentimen</h2>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={dataGrafikPie}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={80}
+                  outerRadius={120}
+                  paddingAngle={8}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {dataGrafikPie.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
+                />
+                <Legend verticalAlign="bottom" height={40} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* 2. Grafik Garis (Tren Waktu) */}
+          <div className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-[var(--border-color)] h-[450px] transition-colors duration-300">
+            <h2 className="text-center text-xl font-bold mb-6">Tren Sentimen (7 Hari Terakhir)</h2>
+            <ResponsiveContainer width="100%" height="80%">
+              <LineChart data={dataTren} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} vertical={false} />
+                <XAxis dataKey="name" stroke={isDarkMode ? '#9ca3af' : '#6b7280'} tick={{fontSize: 12}} tickMargin={10} axisLine={false} />
+                <YAxis stroke={isDarkMode ? '#9ca3af' : '#6b7280'} tick={{fontSize: 12}} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#1f2937' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                />
+                <Legend verticalAlign="bottom" height={20} wrapperStyle={{ paddingTop: '20px' }} />
+                <Line type="monotone" dataKey="Positif" stroke="#22c55e" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="Negatif" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="Netral" stroke="#64748b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+        </div>
+        {/* ---------------- AKHIR GRAFIK SECTION ---------------- */}
 
         {/* LIVE INFERENCE */}
         <div className="bg-[var(--card-bg)] p-6 rounded-3xl shadow-sm border border-[var(--border-color)] mb-10 transition-colors duration-300">
@@ -266,39 +354,6 @@ function App() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* GRAFIK DISTRIBUSI */}
-        <div className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-[var(--border-color)] mb-10 h-[450px] transition-colors duration-300">
-          <h2 className="text-center text-xl font-bold mb-6">Distribusi Statistik Data</h2>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={dataGrafik}
-                cx="50%"
-                cy="50%"
-                innerRadius={90}
-                outerRadius={130}
-                paddingAngle={8}
-                dataKey="value"
-                stroke="none"
-              >
-                {dataGrafik.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  borderRadius: '16px', 
-                  border: 'none', 
-                  backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                  color: isDarkMode ? '#ffffff' : '#000000',
-                  boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' 
-                }} 
-              />
-              <Legend verticalAlign="bottom" height={40} />
-            </PieChart>
-          </ResponsiveContainer>
         </div>
 
         {/* DATA CONTROL (SEARCH & EXPORT) */}

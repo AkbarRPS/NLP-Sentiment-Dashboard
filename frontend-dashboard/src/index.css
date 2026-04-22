@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb; /* Latar terang */
-  --text-main: #1f2937;  /* Judul & teks hitam saat terang */
+  --background: #f9fafb;
+  --card-bg: #ffffff;
+  --text-main: #1f2937;
+  --border-color: #e5e7eb;
 }
 
 .dark {
-  --background: #111827; /* Latar gelap */
-  --text-main: #ffffff;  /* Judul & teks putih saat gelap */
+  --background: #111827;
+  --card-bg: #1f2937;
+  --text-main: #f9fafb;
+  --border-color: #374151;
 }
 
 body {

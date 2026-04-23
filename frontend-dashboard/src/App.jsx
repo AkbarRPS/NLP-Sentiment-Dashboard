@@ -224,7 +224,7 @@ function App() {
         {/* HEADER & SAKLAR TEMA */}
         <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[var(--border-color)] pb-4 mb-8 gap-4">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-main)]">
-            📊 Dashboard Analisis Sentimen
+            📊 Sentify 
           </h1>
           
           <div className="flex items-center gap-3 bg-[var(--card-bg)] px-4 py-2 rounded-full border border-[var(--border-color)] shadow-sm">

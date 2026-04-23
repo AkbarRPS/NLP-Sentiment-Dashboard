@@ -10,7 +10,7 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Dashboard Sentimen AI',
-        short_name: 'SentimenAI',
+        short_name: 'Sentify',
         description: 'Aplikasi Analisis Sentimen Cerdas Berbasis AI',
         theme_color: '#4f46e5', // Warna tema indigo
         background_color: '#ffffff',

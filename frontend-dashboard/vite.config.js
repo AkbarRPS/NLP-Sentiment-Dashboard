@@ -3,38 +3,37 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  // TAMBAHKAN BARIS INI: Agar Vercel bisa membaca lokasi file dengan benar
-  base: './', 
-  
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      
-      // Memastikan PWA aktif bahkan saat proses pengembangan
-      devOptions: {
-        enabled: true
-      },
-
-      includeAssets: [], 
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Quotes Sentiment Dashboard',
-        short_name: 'SentimentApp',
-        description: 'Dashboard Analisis Sentimen Kutipan',
-        theme_color: '#ffffff',
+        name: 'Dashboard Sentimen AI',
+        short_name: 'SentimenAI',
+        description: 'Aplikasi Analisis Sentimen Cerdas Berbasis AI',
+        theme_color: '#4f46e5', // Warna tema indigo
+        background_color: '#ffffff',
+        display: 'standalone', // Memaksa tampilan full-screen seperti aplikasi native
         icons: [
           {
-            src: 'https://dummyimage.com/192x192/2ecc71/ffffff.png&text=Q',
+            src: '/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'https://dummyimage.com/512x512/2ecc71/ffffff.png&text=Q',
+            src: '/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable' // Agar bentuk ikon menyesuaikan sistem operasi (Android/iOS)
           }
         ]
       }
     })
-  ],
+  ]
 })
